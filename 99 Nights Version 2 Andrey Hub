@@ -48,6 +48,10 @@ local itemNames = {
     ["Broken Fan"] = true,
 }
 
+local killAuraEnabled = false
+local killAuraDistance = 10
+local killAuraConnection
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
  
 local Window = Rayfield:CreateWindow({
@@ -269,6 +273,49 @@ local Toggle = esptab:CreateToggle({
                         billboard:Destroy()
                     end
                 end
+            end
+        end
+    end,
+})
+
+local Slider = gametab:CreateSlider({
+    Name = "Distância Kill Aura",
+    Range = {5, 10000},
+    Increment = 1,
+    Suffix = "Studs",
+    CurrentValue = 10,
+    Flag = "KillAuraDistanceSlider",
+    Callback = function(Value)
+        killAuraDistance = Value
+    end,
+})
+
+local Toggle = gametab:CreateToggle({
+    Name = "Ativar Kill Aura Extantanel",
+    CurrentValue = false,
+    Flag = "KillAuraToggle",
+    Callback = function(Value)
+        killAuraEnabled = Value
+
+        if killAuraEnabled then
+            killAuraConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                for _, npc in ipairs(workspace:GetDescendants()) do
+                    if npc:IsA("Model") and npc.Name == "Extantanel" then
+                        local humanoid = npc:FindFirstChildOfClass("Humanoid")
+                        local root = npc:FindFirstChild("HumanoidRootPart")
+                        if humanoid and root and humanoid.Health > 0 then
+                            local dist = (rootPart.Position - root.Position).Magnitude
+                            if dist <= killAuraDistance then
+                                humanoid.Health = 0 -- Mata o NPC
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            if killAuraConnection then
+                killAuraConnection:Disconnect()
+                killAuraConnection = nil
             end
         end
     end,
